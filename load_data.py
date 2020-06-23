@@ -1,11 +1,24 @@
 import pandas as pd
 
+def dosage_to_category(dose):
+
+    if dose < 21:
+        return "Low"
+    elif dose > 49:
+        return "High"
+    else:
+        return "Medium"
+
+
 class Load_Data:
 
-    def __init__(self, filename = "data/warfarin.csv"):
-        self.yname = 'Therapeutic Dose of Warfarin'
+    yname = 'Therapeutic Dose of Warfarin'
+
+    def __init__(self, filename = "data/warfarin.csv", target_clense = True):
+        
         self.data = pd.read_csv(filename)
-        self.data = self.data.loc[self.data[self.yname].notnull()]
+        if target_clense:
+            self.data = self.data.loc[self.data[self.yname].notnull()]
 
     def extract(self, genotype = True):
 
@@ -37,4 +50,4 @@ class Load_Data:
              'VKORC1 genotype: -4451 C>A (861); Chr16:31018002; rs17880887; A/C',
              'VKORC1 QC genotype: -4451 C>A (861); Chr16:31018002; rs17880887; A/C']
 
-        return self.data[outnames], self.data[self.yname]
+        return self.data[outnames], self.data[self.yname].map(dosage_to_category)
