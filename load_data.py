@@ -1,53 +1,59 @@
 import pandas as pd
 
-def dosage_to_category(dose):
-
-    if dose < 21:
-        return "Low"
-    elif dose > 49:
-        return "High"
-    else:
-        return "Medium"
-
 
 class Load_Data:
 
     yname = 'Therapeutic Dose of Warfarin'
 
     def __init__(self, filename = "data/warfarin.csv", target_clense = True):
-        
+
         self.data = pd.read_csv(filename)
         if target_clense:
             self.data = self.data.loc[self.data[self.yname].notnull()]
+        self.clense()
 
-    def extract(self, genotype = True):
+    def clense(self):
+        """
+            Data Clensing:
+            Age to Age_in_decade, imputing nan by mode of age group
+            Height: imputing nan by the mean
+            Weight: imputing nan by the mean
+            Race: get dummies
+            Enzyme inducer: imputing nan by 0
+            Amiodarone: impting nan by 0
 
-        outnames = ['Age', 'Height (cm)', 'Weight (kg)', 'Race', 'Aspirin', 'Acetaminophen or Paracetamol (Tylenol)',
-        'Was Dose of Acetaminophen or Paracetamol (Tylenol) >1300mg/day',
-        'Simvastatin (Zocor)', 'Atorvastatin (Lipitor)', 'Fluvastatin (Lescol)',
-        'Lovastatin (Mevacor)', 'Pravastatin (Pravachol)',
-        'Rosuvastatin (Crestor)', 'Cerivastatin (Baycol)',
-         'Amiodarone (Cordarone)', 'Carbamazepine (Tegretol)',
-         'Phenytoin (Dilantin)', 'Rifampin or Rifampicin',
-         'Sulfonamide Antibiotics', 'Macrolide Antibiotics',
-         'Anti-fungal Azoles', 'Herbal Medications, Vitamins, Supplements']
+            VKORC1 and CYP2C9: using data in consensus, treating unknown as another type
+        """
+        self.data['Age_in_decade'] = self.data['Age'].fillna(self.data['Age'].mode()[0]).astype('str').map(lambda s: s[0]).astype('int')
+        self.data['Height (cm)'] = self.data['Height (cm)'].fillna(self.data['Height (cm)'].mean())
+        self.data['Weight (kg)'] = self.data['Weight (kg)'].fillna(self.data['Weight (kg)'].mean())
+
+        race_dummies = pd.get_dummies(self.data['Race'], prefix='Race')
+        self.race_categories = list(race_dummies.columns)
+        self.data = pd.concat([self.data, race_dummies], axis=1)
+
+        enzyme_inducer_parts = ['Carbamazepine (Tegretol)', 'Phenytoin (Dilantin)', 'Rifampin or Rifampicin']
+        self.data[enzyme_inducer_parts] = self.data[enzyme_inducer_parts].fillna(0)
+        self.data['enzyme_inducer'] = self.data[enzyme_inducer_parts].max(axis=1)
+
+        self.data['Amiodarone (Cordarone)'] = self.data['Amiodarone (Cordarone)'].fillna(0)
+
+        self.data['VKORC1 -1639 consensus'] = self.data['VKORC1 -1639 consensus'].fillna('Unknown')
+        self.data['CYP2C9 consensus'] = self.data['CYP2C9 consensus'].fillna('Unknown')
+
+        genes_dummies = pd.concat([pd.get_dummies(self.data['VKORC1 -1639 consensus'], prefix='VKORC1'),\
+         pd.get_dummies(self.data['CYP2C9 consensus'], prefix='CYP2C9')], axis=1)
+        self.genes_categories = list(genes_dummies.columns)
+        self.data = pd.concat([self.data, genes_dummies], axis=1)
+
+        self.data = pd.concat([self.data, pd.get_dummies(self.data['VKORC1 -1639 consensus']),\
+         pd.get_dummies(self.data['CYP2C9 consensus'])], axis=1)
+
+    def extract(self, genotype = False):
+
+        self.choosen_columns = ['Age_in_decade', 'Height (cm)', 'Weight (kg)'] + self.race_categories + ['enzyme_inducer', 'Amiodarone (Cordarone)']
 
         if genotype:
-            outnames += ['Cyp2C9 genotypes', 'Genotyped QC Cyp2C9*2', 'Genotyped QC Cyp2C9*3',
-            'Combined QC CYP2C9',
-             'VKORC1 genotype: -1639 G>A (3673); chr16:31015190; rs9923231; C/T',
-             'VKORC1 QC genotype: -1639 G>A (3673); chr16:31015190; rs9923231; C/T',
-             'VKORC1 genotype: 497T>G (5808); chr16:31013055; rs2884737; A/C',
-             'VKORC1 QC genotype: 497T>G (5808); chr16:31013055; rs2884737; A/C',
-             'VKORC1 genotype: 1173 C>T(6484); chr16:31012379; rs9934438; A/G',
-             'VKORC1 QC genotype: 1173 C>T(6484); chr16:31012379; rs9934438; A/G',
-             'VKORC1 genotype: 1542G>C (6853); chr16:31012010; rs8050894; C/G',
-             'VKORC1 QC genotype: 1542G>C (6853); chr16:31012010; rs8050894; C/G',
-             'VKORC1 genotype: 3730 G>A (9041); chr16:31009822; rs7294;  A/G',
-             'VKORC1 QC genotype: 3730 G>A (9041); chr16:31009822; rs7294;  A/G',
-             'VKORC1 genotype: 2255C>T (7566); chr16:31011297; rs2359612; A/G',
-             'VKORC1 QC genotype: 2255C>T (7566); chr16:31011297; rs2359612; A/G',
-             'VKORC1 genotype: -4451 C>A (861); Chr16:31018002; rs17880887; A/C',
-             'VKORC1 QC genotype: -4451 C>A (861); Chr16:31018002; rs17880887; A/C']
+            self.choosen_columns += self.genes_categories
 
-        return self.data[outnames], self.data[self.yname].map(dosage_to_category)
+        return self.data[self.choosen_columns], self.data[self.yname]
