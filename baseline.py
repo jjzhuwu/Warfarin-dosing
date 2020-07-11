@@ -1,6 +1,6 @@
 import numpy as np
 
-class Baseline_Alg:
+class Baseline:
 
     def __init__(self):
         pass
@@ -8,12 +8,12 @@ class Baseline_Alg:
     def fit(self, X, y):
         pass
 
-class Fixed_Dose(Baseline_Alg):
+class Fixed_Dose(Baseline):
 
     def predict(self, X):
         return np.array([35 for i in range(X.shape[0])])
 
-class Clinical_Dosing_Alg(Baseline_Alg):
+class Clinical_Dosing_Alg(Baseline):
 
     coef = np.array([[4.0376, -0.2546, 0.0118, 0.0134, -0.6752, 0.4060, 0.0443,\
         0, 1.2799, -0.5695]])
@@ -25,7 +25,7 @@ class Clinical_Dosing_Alg(Baseline_Alg):
         ones_X = np.concatenate((np.ones((X.shape[0], 1)), X.iloc[:, 0:9]), axis=1)
         return np.square(ones_X@self.coef.T)
 
-class Pharma_Dosing_Alg(Baseline_Alg):
+class Pharma_Dosing_Alg(Baseline):
 
     def predict(self, X):
 
