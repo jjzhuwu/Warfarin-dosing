@@ -9,7 +9,7 @@ class LinRel:
         """
         reward_max = np.max(reward)
         reward_min = np.min(reward)
-        normed_reward = (reward-reward_min)/reward_max
+        normed_reward = (reward-reward_min)/(reward_max-reward_min)
         return normed_reward
 
     def __init__(self, K, reward, delta=0.1):
@@ -30,9 +30,11 @@ class LinRel:
 
     def data_load(self, X, y, shuffle=True):
 
-        self.X = X
-        self.X_max = np.max(X, axis=0)
+        self.X = X.values
         self.y = y
+
+        X_max = np.max(X, axis=0)
+        self.Z_max = np.append(X_max, np.ones(self.K-1))
 
         self.T = X.shape[0]
         self.d = X.shape[1]
@@ -40,9 +42,9 @@ class LinRel:
         self.past_reward = np.zeros(0)
 
         if shuffle:
-            indexes = np.random.permutation(T)
+            indexes = np.random.permutation(self.T)
             self.X = self.X[indexes, :]
-            self.y = self.y[indexes, :]
+            self.y = self.y[indexes]
 
     def create_zi(self, x_j, i):
 
@@ -54,7 +56,7 @@ class LinRel:
         z_i[0:x_j.shape[0]] = x_j
         if i > 0:
             z_i[x_j.shape[0]+i-1]=1
-        normed_z_i = z_i/self.X_max/np.sqrt(self.d+self.K-1)
+        normed_z_i = z_i/self.Z_max/np.sqrt(self.d+self.K-1)
         return normed_z_i
 
     def compute_ucb(self, j):
@@ -80,8 +82,8 @@ class LinRel:
             V_tilde contains the vectorss v_i tilde
             """
             W = np.zeros((self.d+self.K-1, self.A_s.shape[0]))
-            for i in self.A_s.shape[0]:
-                W[:, i] = self.create_zi(z_i, x_j, A_s[i])
+            for i in range(self.A_s.shape[0]):
+                W[:, i] = self.create_zi(x_j, self.A_s[i])
 
             UW = U @ W
 
@@ -92,9 +94,9 @@ class LinRel:
             A contains the transpose of a_i
             """
 
-            A = U_tilde.T @ D_inv_masked @ U @ Z
+            A = U_tilde.T @ D_inv_masked @ U @ self.Z
 
-            width = np.sqrt(np.sum(A**2, axis=1)*np.log(2*self.T*self.K/self.delta)) + np.sqrt(np.sum(A**2, axis=0))
+            width = np.sqrt(np.sum(A**2, axis=1)*np.log(2*self.T*self.K/self.delta)) + np.sqrt(np.sum(V_tilde**2, axis=0))
             ucb = (self.past_reward @  A.T).reshape(-1) + width
 
         return ucb, width
