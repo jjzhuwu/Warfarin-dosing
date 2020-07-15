@@ -21,6 +21,8 @@ class LinRel:
                 reward when the true label is i and the prediction is j
         """
         self.K = K
+        self.A_s = np.array(range(K))
+
         self.orig_reward = reward
         self.r = self.normalize_reward(reward)
 
@@ -34,7 +36,7 @@ class LinRel:
 
         self.T = X.shape[0]
         self.d = X.shape[1]
-        self.Z = np.zeros((self.d, 0))
+        self.Z = np.zeros((self.d+self.K-1, 0))
         self.past_reward = np.zeros(0)
 
         if shuffle:
@@ -42,22 +44,29 @@ class LinRel:
             self.X = self.X[indexes, :]
             self.y = self.y[indexes, :]
 
-    def normalize_zi(self, zi):
+    def create_zi(self, x_j, i):
 
         """
-        Normalize the data so that zi has L2(Euclidean) norm at most 1.
-        Assuming zi = [x_i, 1_{i=1}, ..., 1_{i=K-1}]
+        Create and normalize z_i so that normed_z_i has L2(Euclidean) norm at most 1.
+        Assuming z_i = [x_j, 1_{i=1}, ..., 1_{i=K-1}]
         """
-        normed_zi = zi/self.X_max/np.sqrt(self.d+self.K-1)
-        return normed_zi
+        z_i = np.zeros(self.d+self.K-1)
+        z_i[0:x_j.shape[0]] = x_j
+        if i > 0:
+            z_i[x_j.shape[0]+i-1]=1
+        normed_z_i = z_i/self.X_max/np.sqrt(self.d+self.K-1)
+        return normed_z_i
 
-    def step(self, j):
+    def compute_ucb(self, j):
+
+        """
+            A_s is a subset of {0, 1, ..., K-1}
+        """
 
         x_j = self.X[j, :].T
-        y_j = self.y[j, :]
 
-        if j < self.d:
-            pass
+        if self.Z.shape[1] < self.d:
+            return np.array([]), np.array([])
         else:
             D, U = np.linalg.eig(self.Z @ self.Z.T)
             U = U.T
@@ -70,13 +79,9 @@ class LinRel:
             U_tilde contains the vectors u_i tilde
             V_tilde contains the vectorss v_i tilde
             """
-            W = np.zeros((self.d+self.K-1, self.K))
-            for i in range(self.K):
-                zi = np.zeros(self.d+self.K-1)
-                zi[0:x_j.shape[0]] = x_j
-                if i > 0:
-                    zi[x_j.shape[0]+i-1]=1
-                W[:, i] = normalize_zi(zi)
+            W = np.zeros((self.d+self.K-1, self.A_s.shape[0]))
+            for i in self.A_s.shape[0]:
+                W[:, i] = self.create_zi(z_i, x_j, A_s[i])
 
             UW = U @ W
 
@@ -85,7 +90,6 @@ class LinRel:
 
             """
             A contains the transpose of a_i
-
             """
 
             A = U_tilde.T @ D_inv_masked @ U @ Z
@@ -93,10 +97,4 @@ class LinRel:
             width = np.sqrt(np.sum(A**2, axis=1)*np.log(2*self.T*self.K/self.delta)) + np.sqrt(np.sum(A**2, axis=0))
             ucb = (self.past_reward @  A.T).reshape(-1) + width
 
-            choice = np.argmax(ucb)
-
-        return 0
-
-    def train(self):
-        for j in range(self.T):
-            self.step(j)
+        return ucb, width
