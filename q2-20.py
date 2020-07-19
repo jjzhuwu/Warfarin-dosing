@@ -37,7 +37,7 @@ ax.fill_between(np.array([-0.1, 0.1]), np.full(2, regrets_mean-regrets_width), \
         np.full(2, regrets_mean+regrets_width), color='b', alpha=.1)
 plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
 plt.title("Regret Confidence Interval")
-plt.savefig("SupLinRel_Regret_confidence_interval")
+plt.savefig("output/SupLinRel_Regret_confidence_interval")
 plt.clf()
 
 fig, ax = plt.subplots()
@@ -47,5 +47,5 @@ ax.fill_between(np.array([-0.1, 0.1]), np.full(2, acc_mean-acc_width), \
         np.full(2, acc_mean+acc_width), color='b', alpha=.1)
 plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
 plt.title("Accuracy Confidence Interval")
-plt.savefig("SupLinRel_Accuracy_confidence_interval")
+plt.savefig("output/SupLinRel_Accuracy_confidence_interval")
 plt.clf()

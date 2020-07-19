@@ -18,12 +18,12 @@ class Bandit:
     def plot_hist(self):
         plt.plot(self.regret_history)
         plt.title("Regret History over Time")
-        plt.savefig(self.model_name+"_Regret_history")
+        plt.savefig("output/"+self.model_name+"_Regret_history")
         plt.clf()
 
         plt.plot(self.accurate_so_far/np.array(range(1, self.T+1)))
         plt.title("Accuracy Score History")
-        plt.savefig(self.model_name+"_Accuracy_history")
+        plt.savefig("output/"+self.model_name+"_Accuracy_history")
         plt.clf()
 
     def plot_recent_accuracy(self, N=1000):
@@ -34,5 +34,5 @@ class Bandit:
         plt.plot(recent_acc/N)
         plt.text(self.T-N-200, recent_acc[-1]/N, str(recent_acc[-1]/N))
         plt.title("Running Accuracy of Latest %d Trials over Time" % N)
-        plt.savefig(self.model_name+"_Running_accuracy")
+        plt.savefig("output/"+self.model_name+"_Running_accuracy")
         plt.clf()

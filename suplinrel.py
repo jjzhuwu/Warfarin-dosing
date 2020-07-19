@@ -62,7 +62,6 @@ class SupLinRel(LinRel):
             if self.Z.shape[1] < self.d:
                 choice = self.A_s[np.random.randint(len(self.A_s))]
 
-                self.true_reward += self.orig_reward[self.y[j], choice]
                 regret += np.max(self.orig_reward[self.y[j], :])-self.orig_reward[self.y[j], choice]
                 correct_labels += self.y[j] == choice
                 self.regret_history[j] = regret
@@ -74,7 +73,6 @@ class SupLinRel(LinRel):
             elif np.sum(width > np.power(2.0, -s)) > 0:
                 choice = self.A_s[np.argmax(width > np.power(2.0, -s))]
 
-                self.true_reward += self.orig_reward[self.y[j], choice]
                 regret += np.max(self.orig_reward[self.y[j], :])-self.orig_reward[self.y[j], choice]
                 correct_labels += self.y[j] == choice
                 self.regret_history[j] = regret
@@ -85,7 +83,7 @@ class SupLinRel(LinRel):
 
             else:  # np.sum(width > 1/np.sqrt(self.T)) == 0
                 choice = self.A_s[np.argmax(ucb)]
-                self.true_reward += self.orig_reward[self.y[j], choice]
+
                 regret += np.max(self.orig_reward[self.y[j], :])-self.orig_reward[self.y[j], choice]
                 correct_labels += self.y[j] == choice
                 self.regret_history[j] = regret
