@@ -1,21 +1,53 @@
 import numpy as np
 from linrel import LinRel
-import matplotlib.pyplot as plt
 
 class SupLinRel(LinRel):
 
+    def __init__(self, K, reward, delta=0.1):
+
+        """
+        Parameters:
+            K: number of actions
+            reward: matrix of size K*K, reward[i][j] gives the deterministic
+                reward when the true label is i and the prediction is j
+        """
+        self.K = K
+        self.A_s = np.array(range(K))
+
+        self.orig_reward = reward
+        self.r = self.normalize_reward(reward)
+
+        self.delta = delta
+
+        self.model_name = "SupLinRel"
+
+    def data_load(self, X, y, shuffle=True):
+
+        self.X = X.values
+        self.y = y
+
+        X_max = np.max(X, axis=0)
+        self.Z_max = np.append(X_max, np.ones(self.K-1))
+
+        self.T = X.shape[0]
+        self.d = X.shape[1]
+        self.Z = np.zeros((self.d+self.K-1, 0))
+        self.past_reward = np.zeros(0)
+
+        if shuffle:
+            indexes = np.random.permutation(self.T)
+            self.X = self.X[indexes, :]
+            self.y = self.y[indexes]
+
     def run(self):
 
-        self.true_reward = 0
-        self.regret = 0
-
+        regret = 0
         correct_labels = 0
 
         self.regret_history = np.zeros(self.T)
         self.accurate_so_far = np.zeros(self.T)
 
         s=1
-
         for j in range(self.T):
 
             ucb, width = self.compute_ucb(j)
@@ -31,9 +63,9 @@ class SupLinRel(LinRel):
                 choice = self.A_s[np.random.randint(len(self.A_s))]
 
                 self.true_reward += self.orig_reward[self.y[j], choice]
-                self.regret += np.max(self.orig_reward[self.y[j], :])-self.orig_reward[self.y[j], choice]
+                regret += np.max(self.orig_reward[self.y[j], :])-self.orig_reward[self.y[j], choice]
                 correct_labels += self.y[j] == choice
-                self.regret_history[j] = self.regret
+                self.regret_history[j] = regret
                 self.accurate_so_far[j] = correct_labels
 
                 self.Z = np.append(self.Z, self.create_zi(self.X[j, :], choice).reshape(-1, 1), axis=1)
@@ -43,9 +75,9 @@ class SupLinRel(LinRel):
                 choice = self.A_s[np.argmax(width > np.power(2.0, -s))]
 
                 self.true_reward += self.orig_reward[self.y[j], choice]
-                self.regret += np.max(self.orig_reward[self.y[j], :])-self.orig_reward[self.y[j], choice]
+                regret += np.max(self.orig_reward[self.y[j], :])-self.orig_reward[self.y[j], choice]
                 correct_labels += self.y[j] == choice
-                self.regret_history[j] = self.regret
+                self.regret_history[j] = regret
                 self.accurate_so_far[j] = correct_labels
 
                 self.Z = np.append(self.Z, self.create_zi(self.X[j, :], choice).reshape(-1, 1), axis=1)
@@ -54,29 +86,7 @@ class SupLinRel(LinRel):
             else:  # np.sum(width > 1/np.sqrt(self.T)) == 0
                 choice = self.A_s[np.argmax(ucb)]
                 self.true_reward += self.orig_reward[self.y[j], choice]
-                self.regret += np.max(self.orig_reward[self.y[j], :])-self.orig_reward[self.y[j], choice]
+                regret += np.max(self.orig_reward[self.y[j], :])-self.orig_reward[self.y[j], choice]
                 correct_labels += self.y[j] == choice
-                self.regret_history[j] = self.regret
+                self.regret_history[j] = regret
                 self.accurate_so_far[j] = correct_labels
-
-    def plot_hist(self):
-        plt.plot(self.regret_history)
-        plt.title("Regret History over Time")
-        plt.savefig("Regret_history")
-        plt.clf()
-
-        plt.plot(self.accurate_so_far/np.array(range(1, self.T+1)))
-        plt.title("Accuracy Score History")
-        plt.savefig("Accuracy_history")
-        plt.clf()
-
-    def plot_recent_accuracy(self, N=1000):
-        recent_acc = np.zeros(self.T-N+1)
-        recent_acc[0] = self.accurate_so_far[N-1]
-        recent_acc[1:self.T-N+1] = self.accurate_so_far[N:self.T]-self.accurate_so_far[0:self.T-N]
-
-        plt.plot(recent_acc/N)
-        plt.text(self.T-N-200, recent_acc[-1]/N, str(recent_acc[-1]/N))
-        plt.title("Running Accuracy of Latest %d Trials over Time" % N)
-        plt.savefig("Running_accuracy")
-        plt.clf()

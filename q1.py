@@ -1,26 +1,11 @@
 import numpy as np
 import pandas as pd
 
-import load_data, baseline
+import baseline
+from load_data import Load_Data
+from utils import dose_to_category
 
-def dose_to_category(y):
-
-    """
-    Convert dose from continuous to categorical variables. Label 0 for low dosage, label 1
-    for medium dosage, and label 2 for high dosage.
-    """
-    if len(y.shape) > 1:
-        y = y.reshape(-1)
-    low_bound = 21
-    high_bound = 49
-    y_cat = np.zeros((y.shape[0], 3))
-    y_cat[:,0] = y < low_bound
-    y_cat[:,1] = np.logical_and(y >= low_bound, y <= high_bound)
-    y_cat[:,2] = y > high_bound
-    return np.argmax(y_cat, axis=1)
-
-
-X, y = load_data.Load_Data().extract(genotype=True)
+X, y = Load_Data().extract(genotype=True)
 
 model1 = baseline.Fixed_Dose()
 model1.fit(X, y)
