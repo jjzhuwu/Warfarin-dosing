@@ -3,16 +3,15 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from load_data import Load_Data
-from suplinrel import SupLinRel
-from utils import dose_to_category, mean_confidence_interval
+from linreg_bandit import LinReg_Bandit
+from utils import mean_confidence_interval
 
-delta = 0.75
+alpha = 1
 num_run = 20
 
 X, y = Load_Data().extract()
-y = dose_to_category(y)
+threshold = np.array([21, 49])
 
-K = 3
 reward = np.array([[0, -1, -1], \
                     [-1, 0, -1], \
                     [-1, -1, 0]])
@@ -22,11 +21,11 @@ accuracy_scores = np.zeros(num_run)
 
 for i in range(num_run):
     print("Processing Trial # %d out of %d." % (i+1, num_run))
-    SLR = SupLinRel(K, reward, delta=delta)
-    SLR.data_load(X, y)
-    SLR.run()
-    regrets[i] = SLR.total_regret()
-    accuracy_scores[i] = SLR.accuracy_score()
+    linreg = LinReg_Bandit(threshold, reward, alpha=alpha)
+    linreg.data_load(X, y)
+    linreg.run(initial_guess=35)
+    regrets[i] = linreg.total_regret()
+    accuracy_scores[i] = linreg.accuracy_score()
 
 regrets_mean, regrets_width = mean_confidence_interval(regrets)
 acc_mean, acc_width = mean_confidence_interval(accuracy_scores)
@@ -41,8 +40,8 @@ plt.text(0.1, regrets_mean, np.round(regrets_mean, 2))
 plt.text(0.1, regrets_mean+regrets_width, np.round(regrets_mean+regrets_width, 2))
 
 plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
-plt.title("Regret Confidence Interval with delta = "+str(delta))
-plt.savefig("output/SupLinRel_Regret_confidence_interval")
+plt.title("Regret Confidence Interval with alpha = "+str(alpha))
+plt.savefig("output/linreg_Regret_confidence_interval")
 plt.clf()
 
 plt.scatter(np.zeros_like(accuracy_scores), accuracy_scores)
@@ -55,6 +54,6 @@ plt.text(0.1, acc_mean, np.round(acc_mean, 5))
 plt.text(0.1, acc_mean+acc_width,  np.round(acc_mean+acc_width, 5))
 
 plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
-plt.title("Accuracy Confidence Interval with delta = "+str(delta))
-plt.savefig("output/SupLinRel_Accuracy_confidence_interval")
+plt.title("Accuracy Confidence Interval with alpha = "+str(alpha))
+plt.savefig("output/linreg_Accuracy_confidence_interval")
 plt.clf()

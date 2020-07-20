@@ -6,6 +6,8 @@ from suplinrel import SupLinRel
 
 from utils import dose_to_category
 
+delta = 0.75
+
 X, y = Load_Data().extract()
 y = dose_to_category(y)
 
@@ -14,7 +16,7 @@ reward = np.array([[0, -1, -1], \
                     [-1, 0, -1], \
                     [-1, -1, 0]])
 
-SLR = SupLinRel(K, reward, delta=0.5)
+SLR = SupLinRel(K, reward, delta=delta)
 SLR.data_load(X, y)
 SLR.run()
 

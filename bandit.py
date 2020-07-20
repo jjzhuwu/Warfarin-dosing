@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 
 class Bandit:
 
+    model_name = ""
+
     def data_load(self, X, y, shuffle=True):
         pass
 
@@ -26,7 +28,7 @@ class Bandit:
         plt.savefig("output/"+self.model_name+"_Accuracy_history")
         plt.clf()
 
-    def plot_recent_accuracy(self, N=1000):
+    def plot_recent_accuracy(self, N=500):
         recent_acc = np.zeros(self.T-N+1)
         recent_acc[0] = self.accurate_so_far[N-1]
         recent_acc[1:self.T-N+1] = self.accurate_so_far[N:self.T]-self.accurate_so_far[0:self.T-N]

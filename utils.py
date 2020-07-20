@@ -13,8 +13,8 @@ def dose_to_category(y):
     high_bound = 49
     y_cat = np.zeros((y.shape[0], 3))
     y_cat[:,0] = y < low_bound
-    y_cat[:,1] = np.logical_and(y >= low_bound, y <= high_bound)
-    y_cat[:,2] = y > high_bound
+    y_cat[:,1] = np.logical_and(y >= low_bound, y < high_bound)
+    y_cat[:,2] = y >= high_bound
     return np.argmax(y_cat, axis=1)
 
 def mean_confidence_interval(data, confidence=0.95):

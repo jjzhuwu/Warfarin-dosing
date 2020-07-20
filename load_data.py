@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 class Load_Data:
 
     yname = 'Therapeutic Dose of Warfarin'
