@@ -1,43 +1,8 @@
 import numpy as np
+from bandit import Bandit
 from linrel import LinRel
 
-class SupLinRel(LinRel):
-
-    def __init__(self, K, reward, delta=0.1):
-
-        """
-        Parameters:
-            K: number of actions
-            reward: matrix of size K*K, reward[i][j] gives the deterministic
-                reward when the true label is i and the prediction is j
-        """
-        self.K = K
-        self.A_s = np.array(range(K))
-
-        self.orig_reward = reward
-        self.r = self.normalize_reward(reward)
-
-        self.delta = delta
-
-        self.model_name = "SupLinRel"
-
-    def data_load(self, X, y, shuffle=True):
-
-        self.X = X.values
-        self.y = y
-
-        X_max = np.max(X, axis=0)
-        self.Z_max = np.append(X_max, np.ones(self.K-1))
-
-        self.T = X.shape[0]
-        self.d = X.shape[1]
-        self.Z = np.zeros((self.d+self.K-1, 0))
-        self.past_reward = np.zeros(0)
-
-        if shuffle:
-            indexes = np.random.permutation(self.T)
-            self.X = self.X[indexes, :]
-            self.y = self.y[indexes]
+class SupLinRel(LinRel, Bandit):
 
     def run(self):
 
