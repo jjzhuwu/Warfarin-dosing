@@ -1,7 +1,7 @@
 # Warfarin-dosing
  
 This project implements the LinRel and SupLinRel algorithms from the paper [Using Confidence Bounds for
-Exploitation-Exploration Trade-offs][1] by P. Auer, and applies these reinforcement learning algorithms to predict Warfarin dosing given patients' conditions (heights, weights, etc). 
+Exploitation-Exploration Trade-offs][1] by P. Auer, and applies these reinforcement learning algorithms to predict Warfarin dosages given patients' heights, weights, etc. 
 
 The problem description can be found [here](project_description.pdf), which is downloaded from [here][2]. The dosages are classified as low (less than 21mg), medium (between 21mg and 49mg), and high (greater than 49mg).
 
@@ -42,11 +42,11 @@ Thus, viewing LinReg bandit as the best linear bandit algorithm, SupLinRel encou
 
 ## Reference
 
-P. Auer: [Using confidence bounds for exploitation-exploration trade-offs][1]. The Journal of Machine Learning Research. 3:397-422, 2002. 
+P. Auer. [Using confidence bounds for exploitation-exploration trade-offs][1]. The Journal of Machine Learning Research, 3:397-422, 2002. 
 
 [1]:http://www.jmlr.org/papers/volume3/auer02a/auer02a.pdf 
 
-I. W. P. Consortium. [Estimation of the warfarin dose with clinical and pharmacogenetic data][3]. New England Journal of Medicine, 360(8):753–764, 2009.
+I. W. P. Consortium. [Estimation of the warfarin dose with clinical and pharmacogenetic data][3]. New England Journal of Medicine, 360(8):753-764, 2009.
 
 [3]:/data/appx.pdf 
 
